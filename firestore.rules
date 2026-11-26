@@ -1,0 +1,307 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Reusable Hardened Primitives ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validation Blueprints ---
+    function isValidNoteTags(tags) {
+      return tags is list
+        && tags.size() <= 5
+        && tags.hasOnly([
+          'Difesa P&R',
+          'Tiro',
+          'Shot Creation',
+          'Playmaking',
+          'Atletismo',
+          'Rim Finishing',
+          'IQ / Lettura',
+          'Motor',
+          'Proiezione NBA',
+          'Fisico'
+        ]);
+    }
+
+    function isValidScoutingNote(data) {
+      return data.keys().hasAll([
+          'playerId', 'authorUid', 'authorName', 'title',
+          'content', 'tags', 'grade', 'visibility', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'playerId', 'authorUid', 'authorName', 'title',
+          'content', 'tags', 'grade', 'visibility', 'createdAt', 'updatedAt'
+        ])
+        && data.playerId is string && data.playerId.size() >= 2 && data.playerId.size() <= 128 && data.playerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 && data.authorUid == request.auth.uid
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 120
+        && data.content is string && data.content.size() >= 5 && data.content.size() <= 2000
+        && isValidNoteTags(data.tags)
+        && data.grade in ['Lottery', 'Primo Giro', 'Secondo Giro', 'Two-Way / Monitor', 'Da Valutare']
+        && data.visibility == 'public'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidScoutingVideo(data) {
+      return data.keys().hasAll([
+          'playerId', 'authorUid', 'authorName', 'title',
+          'url', 'category', 'timestampLabel', 'notes', 'visibility', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'playerId', 'authorUid', 'authorName', 'title',
+          'url', 'category', 'timestampLabel', 'notes', 'visibility', 'createdAt'
+        ])
+        && data.playerId is string && data.playerId.size() >= 2 && data.playerId.size() <= 128 && data.playerId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 && data.authorUid == request.auth.uid
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 120
+        && data.url is string && data.url.size() >= 10 && data.url.size() <= 500 && data.url.matches('^https://.*')
+        && data.category in ['Full Game', 'Highlights', 'Difesa', 'Half-Court', 'Tiro', 'Possessi']
+        && data.timestampLabel is string && data.timestampLabel.size() <= 20
+        && data.notes is string && data.notes.size() <= 600
+        && data.visibility == 'public'
+        && data.createdAt is timestamp;
+    }
+
+    function isFiniteInRange(val, minVal, maxVal) {
+      return (val is int || val is float) && val >= minVal && val <= maxVal;
+    }
+
+    function isValidCustomPlayer(data, playerId) {
+      return data.keys().hasAll([
+          'id', 'espnId', 'name', 'team', 'conference', 'position', 'classYear', 'group',
+          'height', 'weight', 'gp', 'min', 'pts', 'reb', 'ast', 'stl', 'blk',
+          'tsPct', 'efgPct', 'usgPct', 'ortg', 'drtg', 'bpm', 'obpm', 'dbpm',
+          'astPct', 'tovPct', 'orebPct', 'drebPct', 'ftr', 'threePAr',
+          'rimPct', 'midPct', 'threePct', 'addedByUid', 'addedByName', 'visibility', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'espnId', 'name', 'team', 'conference', 'position', 'classYear', 'group',
+          'height', 'weight', 'gp', 'min', 'pts', 'reb', 'ast', 'stl', 'blk',
+          'tsPct', 'efgPct', 'usgPct', 'ortg', 'drtg', 'bpm', 'obpm', 'dbpm',
+          'astPct', 'tovPct', 'orebPct', 'drebPct', 'ftr', 'threePAr',
+          'rimPct', 'midPct', 'threePct', 'addedByUid', 'addedByName', 'visibility', 'createdAt'
+        ])
+        && data.id is string && data.id == playerId && data.id.size() >= 2 && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.espnId is string && data.espnId.size() <= 40
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.team is string && data.team.size() >= 2 && data.team.size() <= 100
+        && data.conference is string && data.conference.size() >= 1 && data.conference.size() <= 40
+        && data.position in ['G', 'F', 'C']
+        && data.classYear in ['Fr', 'So', 'Jr', 'Sr']
+        && data.group in ['italian', 'draft2027', 'custom']
+        && data.height is string && data.height.size() >= 1 && data.height.size() <= 20
+        && isFiniteInRange(data.weight, 120, 360)
+        && isFiniteInRange(data.gp, 0, 50)
+        && isFiniteInRange(data.min, 0, 48)
+        && isFiniteInRange(data.pts, 0, 60)
+        && isFiniteInRange(data.reb, 0, 30)
+        && isFiniteInRange(data.ast, 0, 20)
+        && isFiniteInRange(data.stl, 0, 10)
+        && isFiniteInRange(data.blk, 0, 10)
+        && isFiniteInRange(data.tsPct, 0, 100)
+        && isFiniteInRange(data.efgPct, 0, 100)
+        && isFiniteInRange(data.usgPct, 0, 60)
+        && isFiniteInRange(data.ortg, 40, 180)
+        && isFiniteInRange(data.drtg, 60, 160)
+        && isFiniteInRange(data.bpm, -25, 25)
+        && isFiniteInRange(data.obpm, -20, 20)
+        && isFiniteInRange(data.dbpm, -20, 20)
+        && isFiniteInRange(data.astPct, 0, 80)
+        && isFiniteInRange(data.tovPct, 0, 60)
+        && isFiniteInRange(data.orebPct, 0, 40)
+        && isFiniteInRange(data.drebPct, 0, 50)
+        && isFiniteInRange(data.ftr, 0, 150)
+        && isFiniteInRange(data.threePAr, 0, 100)
+        && isFiniteInRange(data.rimPct, 0, 100)
+        && isFiniteInRange(data.midPct, 0, 100)
+        && isFiniteInRange(data.threePct, 0, 100)
+        && data.addedByUid is string && data.addedByUid.size() >= 1 && data.addedByUid.size() <= 128 && data.addedByUid == request.auth.uid
+        && data.addedByName is string && data.addedByName.size() >= 1 && data.addedByName.size() <= 80
+        && data.visibility == 'public'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidTierList(arr) {
+      return arr is list
+        && arr.size() <= 25
+        && (arr.size() == 0 || (arr[0] is string && arr[0].size() >= 2 && arr[0].size() <= 128 && arr[0].matches('^[a-zA-Z0-9_\\-]+$')));
+    }
+
+    function isValidShortlist(arr) {
+      return arr is list
+        && arr.size() <= 50
+        && (arr.size() == 0 || (arr[0] is string && arr[0].size() >= 2 && arr[0].size() <= 128 && arr[0].matches('^[a-zA-Z0-9_\\-]+$')));
+    }
+
+    function isValidBigBoard(data, boardId) {
+      return data.keys().hasAll([
+          'ownerUid', 'ownerName', 'boardType', 'title',
+          'tier1', 'tier2', 'tier3', 'tier4', 'tier5',
+          'visibility', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'ownerName', 'boardType', 'title',
+          'tier1', 'tier2', 'tier3', 'tier4', 'tier5',
+          'visibility', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid == request.auth.uid
+        && data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 80
+        && data.boardType in ['draft2027', 'italian']
+        && boardId == request.auth.uid + '_' + data.boardType
+        && data.title is string && data.title.size() >= 2 && data.title.size() <= 100
+        && isValidTierList(data.tier1)
+        && isValidTierList(data.tier2)
+        && isValidTierList(data.tier3)
+        && isValidTierList(data.tier4)
+        && isValidTierList(data.tier5)
+        && data.visibility == 'public'
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'shortlist', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && data.uid == request.auth.uid && data.uid.size() <= 128
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && (!('shortlist' in data) || isValidShortlist(data.shortlist))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+
+    match /scouting_notes/{noteId} {
+      allow get: if isValidId(noteId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+      allow create: if isVerifiedUser()
+        && isValidId(noteId)
+        && isValidScoutingNote(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(noteId)
+        && isValidScoutingNote(incoming())
+        && (
+          existing().authorUid == request.auth.uid
+          && incoming().authorUid == existing().authorUid
+          && incoming().playerId == existing().playerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'tags', 'grade', 'updatedAt'])
+        );
+      allow delete: if isVerifiedUser()
+        && isValidId(noteId)
+        && existing().authorUid == request.auth.uid;
+    }
+
+    match /scouting_videos/{videoId} {
+      allow get: if isValidId(videoId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+      allow create: if isVerifiedUser()
+        && isValidId(videoId)
+        && isValidScoutingVideo(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(videoId)
+        && isValidScoutingVideo(incoming())
+        && (
+          existing().authorUid == request.auth.uid
+          && incoming().authorUid == existing().authorUid
+          && incoming().playerId == existing().playerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'url', 'category', 'timestampLabel', 'notes'])
+        );
+      allow delete: if isVerifiedUser()
+        && isValidId(videoId)
+        && existing().authorUid == request.auth.uid;
+    }
+
+    match /custom_players/{playerId} {
+      allow get: if isValidId(playerId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+      allow create: if isVerifiedUser()
+        && isValidId(playerId)
+        && isValidCustomPlayer(incoming(), playerId)
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isVerifiedUser()
+        && isValidId(playerId)
+        && existing().addedByUid == request.auth.uid;
+    }
+
+    match /big_boards/{boardId} {
+      allow get: if isValidId(boardId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+      allow create: if isVerifiedUser()
+        && isValidId(boardId)
+        && isValidBigBoard(incoming(), boardId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(boardId)
+        && isValidBigBoard(incoming(), boardId)
+        && (
+          existing().ownerUid == request.auth.uid
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().boardType == existing().boardType
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['ownerName', 'title', 'tier1', 'tier2', 'tier3', 'tier4', 'tier5', 'updatedAt'])
+        );
+      allow delete: if isVerifiedUser()
+        && isValidId(boardId)
+        && existing().ownerUid == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && (
+          incoming().uid == existing().uid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'shortlist', 'updatedAt'])
+        );
+      allow delete: if false;
+    }
+  }
+}

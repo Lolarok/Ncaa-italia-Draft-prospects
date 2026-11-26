@@ -1,0 +1,8 @@
+{
+  "name": "HoopScope NCAA",
+  "description": "Piattaforma di scouting e analytics avanzate NCAA Division I per giocatori italiani e prospetti NBA Draft 2027 con leaderboard percentili, split On/Off, mappe di tiro e sala video collaborativa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

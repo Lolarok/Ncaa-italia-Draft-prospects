@@ -1,0 +1,405 @@
+{
+  "entities": {
+    "ScoutingNote": {
+      "title": "ScoutingNote",
+      "description": "Nota di scouting collaborativa associata a un giocatore NCAA.",
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Identificativo del giocatore nella watchlist."
+        },
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID Firebase dell'autore."
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Nome pubblico dello scout."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Titolo sintetico dell'osservazione."
+        },
+        "content": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 2000,
+          "description": "Testo dettagliato della nota tecnica."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Fino a 5 tag tecnici dall'elenco predefinito."
+        },
+        "grade": {
+          "type": "string",
+          "enum": ["Lottery", "Primo Giro", "Secondo Giro", "Two-Way / Monitor", "Da Valutare"],
+          "description": "Fascia di proiezione scouting."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"],
+          "description": "Visibilita pubblica nella sala scouting."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp server di creazione."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp server di aggiornamento."
+        }
+      },
+      "required": [
+        "playerId",
+        "authorUid",
+        "authorName",
+        "title",
+        "content",
+        "tags",
+        "grade",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ScoutingVideo": {
+      "title": "ScoutingVideo",
+      "description": "Clip video o partita collegata alla scheda giocatore.",
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "url": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500,
+          "pattern": "^https://.*"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Full Game", "Highlights", "Difesa", "Half-Court", "Tiro", "Possessi"]
+        },
+        "timestampLabel": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 20
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 600
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "playerId",
+        "authorUid",
+        "authorName",
+        "title",
+        "url",
+        "category",
+        "timestampLabel",
+        "notes",
+        "visibility",
+        "createdAt"
+      ]
+    },
+    "CustomPlayer": {
+      "title": "CustomPlayer",
+      "description": "Giocatore NCAA importato dalla ricerca API e salvato nella watchlist condivisa.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "espnId": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "team": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "conference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "position": {
+          "type": "string",
+          "enum": ["G", "F", "C"]
+        },
+        "classYear": {
+          "type": "string",
+          "enum": ["Fr", "So", "Jr", "Sr"]
+        },
+        "group": {
+          "type": "string",
+          "enum": ["italian", "draft2027", "custom"]
+        },
+        "height": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "weight": {
+          "type": "number"
+        },
+        "gp": { "type": "number" },
+        "min": { "type": "number" },
+        "pts": { "type": "number" },
+        "reb": { "type": "number" },
+        "ast": { "type": "number" },
+        "stl": { "type": "number" },
+        "blk": { "type": "number" },
+        "tsPct": { "type": "number" },
+        "efgPct": { "type": "number" },
+        "usgPct": { "type": "number" },
+        "ortg": { "type": "number" },
+        "drtg": { "type": "number" },
+        "bpm": { "type": "number" },
+        "obpm": { "type": "number" },
+        "dbpm": { "type": "number" },
+        "astPct": { "type": "number" },
+        "tovPct": { "type": "number" },
+        "orebPct": { "type": "number" },
+        "drebPct": { "type": "number" },
+        "ftr": { "type": "number" },
+        "threePAr": { "type": "number" },
+        "rimPct": { "type": "number" },
+        "midPct": { "type": "number" },
+        "threePct": { "type": "number" },
+        "addedByUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "addedByName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "espnId",
+        "name",
+        "team",
+        "conference",
+        "position",
+        "classYear",
+        "group",
+        "height",
+        "weight",
+        "gp",
+        "min",
+        "pts",
+        "reb",
+        "ast",
+        "stl",
+        "blk",
+        "tsPct",
+        "efgPct",
+        "usgPct",
+        "ortg",
+        "drtg",
+        "bpm",
+        "obpm",
+        "dbpm",
+        "astPct",
+        "tovPct",
+        "orebPct",
+        "drebPct",
+        "ftr",
+        "threePAr",
+        "rimPct",
+        "midPct",
+        "threePct",
+        "addedByUid",
+        "addedByName",
+        "visibility",
+        "createdAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Profilo privato dello scout autenticato.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "shortlist": {
+          "type": "array",
+          "description": "Lista personale di giocatori preferiti dello scout (max 50 ID giocatore)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "createdAt", "updatedAt"]
+    },
+    "BigBoard": {
+      "title": "BigBoard",
+      "description": "Big Board personale condivisa (Draft 2027 o Ranking Italiani) strutturata in 5 tier per il consenso community.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "ownerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "boardType": {
+          "type": "string",
+          "enum": ["draft2027", "italian"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "tier1": {
+          "type": "array",
+          "description": "Giocatori nel Tier 1 (max 25 ID giocatore)."
+        },
+        "tier2": {
+          "type": "array",
+          "description": "Giocatori nel Tier 2 (max 25 ID giocatore)."
+        },
+        "tier3": {
+          "type": "array",
+          "description": "Giocatori nel Tier 3 (max 25 ID giocatore)."
+        },
+        "tier4": {
+          "type": "array",
+          "description": "Giocatori nel Tier 4 (max 25 ID giocatore)."
+        },
+        "tier5": {
+          "type": "array",
+          "description": "Giocatori nel Tier 5 (max 25 ID giocatore)."
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "ownerName",
+        "boardType",
+        "title",
+        "tier1",
+        "tier2",
+        "tier3",
+        "tier4",
+        "tier5",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/scouting_notes/{noteId}": {
+      "schema": { "$ref": "#/entities/ScoutingNote" },
+      "description": "Note di scouting condivise per i giocatori monitorati."
+    },
+    "/scouting_videos/{videoId}": {
+      "schema": { "$ref": "#/entities/ScoutingVideo" },
+      "description": "Link e clip video condivisi per i giocatori monitorati."
+    },
+    "/custom_players/{playerId}": {
+      "schema": { "$ref": "#/entities/CustomPlayer" },
+      "description": "Giocatori NCAA aggiunti dagli utenti tramite ricerca API."
+    },
+    "/big_boards/{boardId}": {
+      "schema": { "$ref": "#/entities/BigBoard" },
+      "description": "Big Board personali Draft 2027 e Ranking Italiani per il consenso community (ID deterministico uid_boardType)."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Profili privati degli scout autenticati."
+    }
+  }
+}
